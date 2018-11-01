@@ -9,7 +9,7 @@
 
 #define ESP8266_ATCMD_PREFIX "AT+"
 UART_HandleTypeDef* esp8266UART_ = NULL;
-uint8_t rxbuf_[1];
+uint8_t rxbuf_[2];
 char ssid_[64];
 char pwd_[64];
 
