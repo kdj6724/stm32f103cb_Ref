@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Src/dev/sensor/esp8266_dev.c \
 ../Src/dev/sensor/hc_06.c 
 
 OBJS += \
+./Src/dev/sensor/esp8266_dev.o \
 ./Src/dev/sensor/hc_06.o 
 
 C_DEPS += \
+./Src/dev/sensor/esp8266_dev.d \
 ./Src/dev/sensor/hc_06.d 
 
 

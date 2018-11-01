@@ -25,7 +25,7 @@ Src/main.o: ../Src/main.c C:/Users/kdj6724/stm32/test/Inc/main.h \
  C:/Users/kdj6724/STM32Cube/Repository/STM32Cube_FW_F1_V1.6.1/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  C:/Users/kdj6724/STM32Cube/Repository/STM32Cube_FW_F1_V1.6.1/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  C:/Users/kdj6724/STM32Cube/Repository/STM32Cube_FW_F1_V1.6.1/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
- ../Src/dev/sensor/hc_06.h
+ ../Src/dev/sensor/hc_06.h ../Src/dev/sensor/esp8266_dev.h
 
 C:/Users/kdj6724/stm32/test/Inc/main.h:
 
@@ -82,3 +82,5 @@ C:/Users/kdj6724/STM32Cube/Repository/STM32Cube_FW_F1_V1.6.1/Drivers/STM32F1xx_H
 C:/Users/kdj6724/STM32Cube/Repository/STM32Cube_FW_F1_V1.6.1/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
 
 ../Src/dev/sensor/hc_06.h:
+
+../Src/dev/sensor/esp8266_dev.h:

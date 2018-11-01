@@ -42,6 +42,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "dev/sensor/hc_06.h"
+#include "dev/sensor/esp8266_dev.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -87,7 +88,9 @@ int _write(int file, char* data, int len) {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	hc06_receive_byte();
+	//hc06_receive_byte();
+  if(huart->Instance == USART3)
+    esp8266_receive_byte();
 }
 /* USER CODE END 0 */
 
@@ -130,15 +133,16 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  hc06_init(&huart3);
-  //hc06_init(&huart1);
+  //hc06_init(&huart3);
+  esp8266_init(&huart3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  printf("test\r\n");
+	 // esp8266_send_uart_cmd(&huart3, "AT\n", 3);
+	//  HAL_Delay(2000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

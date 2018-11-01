@@ -14,6 +14,7 @@
 "Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal_tim.o"
 "Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal_tim_ex.o"
 "Drivers/STM32F1xx_HAL_Driver/stm32f1xx_hal_uart.o"
+"Src/dev/sensor/esp8266_dev.o"
 "Src/dev/sensor/hc_06.o"
 "Src/main.o"
 "Src/stm32f1xx_hal_msp.o"
