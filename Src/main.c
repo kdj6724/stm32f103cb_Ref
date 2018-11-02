@@ -54,7 +54,6 @@ TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
-UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -89,8 +88,6 @@ int _write(int file, char* data, int len) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	//hc06_receive_byte();
-  if(huart->Instance == USART3)
-    esp8266_receive_byte();
 }
 /* USER CODE END 0 */
 
@@ -134,15 +131,16 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   //hc06_init(&huart3);
-  esp8266_init(&huart3);
+  esp8266_init(USART3);
+  esp8266_set_ssid("your ssid");
+  esp8266_set_pwd("your password");
+  esp8266_connect();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	 // esp8266_send_uart_cmd(&huart3, "AT\n", 3);
-	//  HAL_Delay(2000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -218,8 +216,8 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USART3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(USART3_IRQn);
+  NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+  NVIC_EnableIRQ(USART3_IRQn);
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -354,18 +352,38 @@ static void MX_USART2_UART_Init(void)
 static void MX_USART3_UART_Init(void)
 {
 
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 9600;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
+  LL_USART_InitTypeDef USART_InitStruct;
+
+  LL_GPIO_InitTypeDef GPIO_InitStruct;
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART3);
+  
+  /**USART3 GPIO Configuration  
+  PB10   ------> USART3_TX
+  PB11   ------> USART3_RX 
+  */
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_10;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_11;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_FLOATING;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  USART_InitStruct.BaudRate = 9600;
+  USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
+  USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
+  USART_InitStruct.Parity = LL_USART_PARITY_NONE;
+  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+  USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+  LL_USART_Init(USART3, &USART_InitStruct);
+
+  LL_USART_ConfigAsyncMode(USART3);
+
+  LL_USART_Enable(USART3);
 
 }
 
@@ -388,15 +406,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LoadCell_CLK_Pin|Buzzer_CTRL_Pin|ELECTROMAGNET_CTRL_1_Pin|ELECTROMAGNET_CTRL_2_Pin 
-                          |BAR_LED_CTRL_1_Pin|LED_G_EXTERNAL_Pin|LED_B_EXTERNAL_Pin|GPIO_PIN_8 
-                          |GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LoadCell_CLK_Pin|ELECTROMAGNET_CTRL_1_Pin|ELECTROMAGNET_CTRL_2_Pin|BAR_LED_CTRL_1_Pin 
+                          |LED_G_EXTERNAL_Pin|LED_B_EXTERNAL_Pin|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, BAR_LED_CTRL_2_Pin|USER_LED_STATUS_Pin|LED_R_EXTERNAL_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Buzzer_CTRL_EXTRNAL_GPIO_Port, Buzzer_CTRL_EXTRNAL_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PC13 PC14 PC15 */
   GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
@@ -404,12 +418,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LoadCell_CLK_Pin Buzzer_CTRL_Pin ELECTROMAGNET_CTRL_1_Pin ELECTROMAGNET_CTRL_2_Pin 
-                           BAR_LED_CTRL_1_Pin LED_G_EXTERNAL_Pin LED_B_EXTERNAL_Pin Buzzer_CTRL_EXTRNAL_Pin 
-                           PB8 PB9 */
-  GPIO_InitStruct.Pin = LoadCell_CLK_Pin|Buzzer_CTRL_Pin|ELECTROMAGNET_CTRL_1_Pin|ELECTROMAGNET_CTRL_2_Pin 
-                          |BAR_LED_CTRL_1_Pin|LED_G_EXTERNAL_Pin|LED_B_EXTERNAL_Pin|Buzzer_CTRL_EXTRNAL_Pin 
-                          |GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : LoadCell_CLK_Pin ELECTROMAGNET_CTRL_1_Pin ELECTROMAGNET_CTRL_2_Pin BAR_LED_CTRL_1_Pin 
+                           LED_G_EXTERNAL_Pin LED_B_EXTERNAL_Pin PB8 PB9 */
+  GPIO_InitStruct.Pin = LoadCell_CLK_Pin|ELECTROMAGNET_CTRL_1_Pin|ELECTROMAGNET_CTRL_2_Pin|BAR_LED_CTRL_1_Pin 
+                          |LED_G_EXTERNAL_Pin|LED_B_EXTERNAL_Pin|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

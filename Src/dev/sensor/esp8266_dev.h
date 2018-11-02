@@ -17,9 +17,8 @@ enum esp8266_mode {
 	esp8266_AP,
 	esp8266_DUAL,
 };
-int esp8266_send_uart_cmd(UART_HandleTypeDef* uart, uint8_t* data, int len);
-int esp8266_receive_byte(void);
-int esp8266_init(UART_HandleTypeDef* uart);
+
+int esp8266_init(USART_TypeDef* uart);
 int esp8266_setmode(int mode);
 int esp8266_set_ssid(char* ssid);
 int esp8266_set_pwd(char* pwd);

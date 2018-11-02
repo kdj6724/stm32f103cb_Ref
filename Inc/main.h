@@ -42,6 +42,17 @@
 #define __MAIN_H__
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f1xx_ll_usart.h"
+#include "stm32f1xx_ll_rcc.h"
+#include "stm32f1xx_ll_bus.h"
+#include "stm32f1xx_ll_system.h"
+#include "stm32f1xx_ll_exti.h"
+#include "stm32f1xx_ll_cortex.h"
+#include "stm32f1xx_ll_utils.h"
+#include "stm32f1xx_ll_pwr.h"
+#include "stm32f1xx_ll_dma.h"
+#include "stm32f1xx.h"
+#include "stm32f1xx_ll_gpio.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -60,8 +71,6 @@
 #define Emergence_BTN_EXTI1_EXTI_IRQn EXTI1_IRQn
 #define BOOT1_Pin GPIO_PIN_2
 #define BOOT1_GPIO_Port GPIOB
-#define Buzzer_CTRL_Pin GPIO_PIN_12
-#define Buzzer_CTRL_GPIO_Port GPIOB
 #define ELECTROMAGNET_CTRL_1_Pin GPIO_PIN_13
 #define ELECTROMAGNET_CTRL_1_GPIO_Port GPIOB
 #define ELECTROMAGNET_CTRL_2_Pin GPIO_PIN_14
@@ -81,8 +90,6 @@
 #define LED_G_EXTERNAL_GPIO_Port GPIOB
 #define LED_B_EXTERNAL_Pin GPIO_PIN_4
 #define LED_B_EXTERNAL_GPIO_Port GPIOB
-#define Buzzer_CTRL_EXTRNAL_Pin GPIO_PIN_5
-#define Buzzer_CTRL_EXTRNAL_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**
