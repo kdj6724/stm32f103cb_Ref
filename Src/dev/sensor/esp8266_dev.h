@@ -5,6 +5,7 @@
  *      Author: kdj6724
  */
 #include "stm32f1xx_hal.h"
+#include "../data/queue.h"
 
 #ifndef DEV_SENSOR_ESP8266_DEV_H_
 #define DEV_SENSOR_ESP8266_DEV_H_
@@ -12,6 +13,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+Queue esp8266MessageQueue_;
+
 enum esp8266_mode {
 	esp8266_STATION = 0,
 	esp8266_AP,

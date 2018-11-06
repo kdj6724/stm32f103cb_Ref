@@ -41,6 +41,8 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include <stdlib.h>
+#include <string.h>
 #include "dev/sensor/hc_06.h"
 #include "dev/sensor/esp8266_dev.h"
 /* USER CODE END Includes */
@@ -105,7 +107,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char user = 0;
+  char data[128];
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -141,26 +143,19 @@ int main(void)
   esp8266_init(USART3);
   esp8266_set_ssid("iPhone");
   esp8266_set_pwd("rlaehd30703");
-  //esp8266_select_test_menu('s');
-  //esp8266_scan();
-  while ((HAL_UART_Receive(&huart1, (uint8_t*)&user, 2, 1000) != HAL_OK)) {
-
-  }
-  printf("rxrx %c\r\n", user);
-  switch(user) {
-  case 's':
-    esp8266_scan();
-    break;
-  }
-  user = 0;
-
+  esp8266_connect();
+  memset(data, 0, sizeof(data));
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+    if (dequeue(&esp8266MessageQueue_, data) > 0) {
+      printf("data -> %s\r\n", data);
+      memset(data, 0, sizeof(data));
+      HAL_Delay(1000);
+    }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

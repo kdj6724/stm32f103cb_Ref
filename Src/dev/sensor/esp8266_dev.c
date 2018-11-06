@@ -8,38 +8,29 @@
 #include "esp8266_dev.h"
 
 #define ESP8266_ATCMD_PREFIX "AT+"
-#define ESP8266_UART_RXLEN  32
+#define ESP8266_UART_RXLEN  64
 
 USART_TypeDef* esp8266UART_ = NULL;
 uint8_t rxbuf_[ESP8266_UART_RXLEN];
 char ssid_[64];
 char pwd_[64];
-char waitres_ = 0;
 
 void USART_Rx_Callback(USART_TypeDef* uart) {
   static uint16_t cnt = 0;
   char t;
-  static char skipFirstCR = 0;
-  int i = 0;
 
   if(LL_USART_IsActiveFlag_RXNE(uart)) {
     t = LL_USART_ReceiveData8(uart);
-    if (skipFirstCR == 0) {
-      if (t == '\r')
-        skipFirstCR = 1;
-      return;
-    }
 
-    if((t!='\r') && (cnt < (ESP8266_UART_RXLEN-1))) {
+    if((t!='\n') && (cnt < (ESP8266_UART_RXLEN-1))) {
       rxbuf_[cnt] = t;
       cnt++;
     }
     else {
-      printf("[esp8266-dev] received : %s\r\n", rxbuf_);
+     // printf("[esp8266-dev] received : %s\r\n", rxbuf_);
+      enqueue(&esp8266MessageQueue_, (char*)rxbuf_, cnt);
       memset(rxbuf_, 0, sizeof(rxbuf_));
-      skipFirstCR = 0;
       cnt = 0;
-      waitres_ = 1;
     }
   }
 }
@@ -107,6 +98,7 @@ int esp8266_init(USART_TypeDef* uart) {
 		return -1;
 	}
 	//LL_USART_Enable(uart);
+	init_queue(&esp8266MessageQueue_);
 	LL_USART_EnableIT_RXNE(uart);
 	esp8266UART_ = uart;
 	memset(ssid_, 0, sizeof(ssid_));
@@ -162,10 +154,6 @@ int esp8266_scan() {
   memset(cmd, 0, sizeof(cmd));
   sprintf((char*)cmd, "%sCWLAP\r\n",ESP8266_ATCMD_PREFIX);
   esp8266_send_uart_cmd(esp8266UART_, cmd, strlen((char*)cmd));
-
-  while(!waitres_) {
-    HAL_Delay(50);
-  }
   return 0;
 }
 
