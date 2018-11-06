@@ -28,9 +28,11 @@ void enqueue(Queue* queue, char* data, int len) {
   if (is_full(queue))
     return;
   newNode = (Node*) malloc(sizeof(Node));
-  newNode->data = (char*) malloc(len);
+  newNode->data = (char*) malloc(len+1);
+  memset(newNode->data, 0, len+1);
+  memcpy(newNode->data, data, len);
 
-  if (is_empty(queue))
+  if (queue->rear == NULL)
     queue->front = newNode;
   else
     queue->rear->next = newNode;
