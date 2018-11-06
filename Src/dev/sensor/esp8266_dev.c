@@ -14,13 +14,14 @@ USART_TypeDef* esp8266UART_ = NULL;
 uint8_t rxbuf_[ESP8266_UART_RXLEN];
 char ssid_[64];
 char pwd_[64];
+char waitres_ = 0;
 
 void USART_Rx_Callback(USART_TypeDef* uart) {
   static uint16_t cnt = 0;
   char t;
   static char skipFirstCR = 0;
   int i = 0;
-#if 1
+
   if(LL_USART_IsActiveFlag_RXNE(uart)) {
     t = LL_USART_ReceiveData8(uart);
     if (skipFirstCR == 0) {
@@ -38,29 +39,32 @@ void USART_Rx_Callback(USART_TypeDef* uart) {
       memset(rxbuf_, 0, sizeof(rxbuf_));
       skipFirstCR = 0;
       cnt = 0;
+      waitres_ = 1;
     }
   }
-#else
-  if(LL_USART_IsActiveFlag_RXNE(uart)) {
-      t = LL_USART_ReceiveData8(uart);
+}
 
-      if(t == 0 || cnt < (ESP8266_UART_RXLEN-1)) {
-        rxbuf_[cnt] = t;
-        cnt++;
-      }
-      else {
-        printf("[esp8266-dev] received : ");
-        for (i=0; i<ESP8266_UART_RXLEN; i++) {
-          printf("0x%x ", rxbuf_[i]);
-        }
-        printf("\r\n");
-        //printf("[esp8266-dev] received : %s\r\n", rxbuf_);
-        memset(rxbuf_, 0, sizeof(rxbuf_));
-        skipFirstCR = 0;
-        cnt = 0;
-      }
-    }
-#endif
+void esp8266_print_test_menu() {
+  printf("esp8266 wifi test menu\r\n");
+  printf("%c) AP Connect \r\n", ESP8266_TEST_CONNECT);
+  printf("%c) AP Scan \r\n", ESP8266_TEST_SCAN);
+  printf("%c) Get IP Address \r\n", ESP8266_TEST_GETIP);
+  printf("Select : \r\n");
+}
+
+int esp8266_select_test_menu(char index) {
+  switch(index) {
+  case ESP8266_TEST_CONNECT:
+    esp8266_connect();
+    return 0;
+  case ESP8266_TEST_GETIP:
+    esp8266_get_ip_address();
+    return 0;
+  case ESP8266_TEST_SCAN:
+    esp8266_scan();
+    return 0;
+  }
+  return 0;
 }
 
 int esp8266_uart_send(USART_TypeDef* uart, uint8_t *Buffer, int reqLen){
@@ -132,7 +136,7 @@ int esp8266_set_ssid(char* ssid) {
 
 int esp8266_set_pwd(char* pwd) {
 	if (pwd == NULL) {
-		strcpy(pwd_, "None");
+		strcpy(pwd_, "");
 		return 0;
 	}
 	strcpy(pwd_, pwd);
@@ -147,13 +151,30 @@ int esp8266_connect() {
 		return -1;
 	memset(cmd, 0, sizeof(cmd));
 	sprintf((char*)cmd, "%sCWJAP=\"%s\",\"%s\"\r\n",ESP8266_ATCMD_PREFIX, ssid_, pwd_);
+	//sprintf((char*)cmd, "%sCWJAP=\"%s\"\r\n",ESP8266_ATCMD_PREFIX, ssid_, pwd_);
 	return esp8266_send_uart_cmd(esp8266UART_, cmd, strlen((char*)cmd));
 }
 
 // station mode ������ ����
 int esp8266_scan() {
+  uint8_t cmd[128];
 
-	return 0;
+  memset(cmd, 0, sizeof(cmd));
+  sprintf((char*)cmd, "%sCWLAP\r\n",ESP8266_ATCMD_PREFIX);
+  esp8266_send_uart_cmd(esp8266UART_, cmd, strlen((char*)cmd));
+
+  while(!waitres_) {
+    HAL_Delay(50);
+  }
+  return 0;
+}
+
+int esp8266_get_ip_address() {
+  uint8_t cmd[128];
+
+  memset(cmd, 0, sizeof(cmd));
+  sprintf((char*)cmd, "%sCIFSR\r\n",ESP8266_ATCMD_PREFIX);
+  return esp8266_send_uart_cmd(esp8266UART_, cmd, strlen((char*)cmd));
 }
 
 int esp8266_disconnect() {

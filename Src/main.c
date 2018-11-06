@@ -57,7 +57,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint8_t rxbuf_[2];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,6 +88,12 @@ int _write(int file, char* data, int len) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	//hc06_receive_byte();
+  if (huart->Instance == USART1) {
+    //esp8266_select_test_menu(rxbuf_[0]);
+    //esp8266_print_test_menu();
+    //HAL_UART_Receive_IT(&huart1, rxbuf_, 1);
+  }
+
 }
 /* USER CODE END 0 */
 
@@ -99,7 +105,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  char user = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -131,16 +137,30 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   //hc06_init(&huart3);
+  //HAL_UART_Receive_IT(&huart1, rxbuf_, 1);
   esp8266_init(USART3);
-  esp8266_set_ssid("your ssid");
-  esp8266_set_pwd("your password");
-  esp8266_connect();
+  esp8266_set_ssid("iPhone");
+  esp8266_set_pwd("rlaehd30703");
+  //esp8266_select_test_menu('s');
+  //esp8266_scan();
+  while ((HAL_UART_Receive(&huart1, (uint8_t*)&user, 2, 1000) != HAL_OK)) {
+
+  }
+  printf("rxrx %c\r\n", user);
+  switch(user) {
+  case 's':
+    esp8266_scan();
+    break;
+  }
+  user = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -209,9 +229,6 @@ static void MX_NVIC_Init(void)
   /* TIM2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
-  /* USART1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USART2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(USART2_IRQn);
@@ -221,6 +238,9 @@ static void MX_NVIC_Init(void)
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  /* USART1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 /* I2C1 init function */
