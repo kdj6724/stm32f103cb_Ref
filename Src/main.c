@@ -143,7 +143,8 @@ int main(void)
   esp8266_init(USART3);
   esp8266_set_ssid("iPhone");
   esp8266_set_pwd("rlaehd30703");
-  esp8266_connect();
+  //esp8266_connect();
+  esp8266_scan();
   memset(data, 0, sizeof(data));
   /* USER CODE END 2 */
 
@@ -152,10 +153,10 @@ int main(void)
   while (1)
   {
     if (dequeue(&esp8266MessageQueue_, data) > 0) {
-      printf("data -> %s\r\n", data);
+      printf("%s - \r\n", data);
       memset(data, 0, sizeof(data));
-      HAL_Delay(1000);
     }
+    HAL_Delay(500);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

@@ -17,7 +17,7 @@ int init_queue(Queue* queue) {
   return 0;
 }
 int is_empty(Queue* queue) {
-  return (queue->count == 0);
+  return (queue->front == NULL);
 }
 int is_full(Queue* queue) {
   return (queue->count >= QUEUE_MAX_DATA);
@@ -28,6 +28,7 @@ void enqueue(Queue* queue, char* data, int len) {
   if (is_full(queue))
     return;
   newNode = (Node*) malloc(sizeof(Node));
+  newNode->next = NULL;
   newNode->data = (char*) malloc(len+1);
   memset(newNode->data, 0, len+1);
   memcpy(newNode->data, data, len);
@@ -41,19 +42,22 @@ void enqueue(Queue* queue, char* data, int len) {
   queue->count++;
 }
 int dequeue(Queue* queue, char* data) {
-  Node* node;
+  Node* tempPtr;
   int len = 0;
-  if (is_empty(queue))
+  if (is_empty(queue)) {
     return 0;
+  }
   if (data == NULL)
     return -1;
 
-  node = queue->front;
-  memcpy(data, node->data, strlen(node->data));
+  tempPtr = queue->front;
+  memcpy(data, tempPtr->data, strlen(tempPtr->data));
   len = strlen(data);
-  queue->front = node->next;
-  free(node->data);
-  free(node);
+  queue->front = tempPtr->next;
+  if (tempPtr->next == NULL)
+    queue->rear = NULL;
+  free(tempPtr->data);
+  free(tempPtr);
   queue->count--;
 
   return len;
