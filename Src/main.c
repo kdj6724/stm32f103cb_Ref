@@ -45,6 +45,7 @@
 #include <string.h>
 #include "dev/sensor/hc_06.h"
 #include "dev/sensor/esp8266_dev.h"
+#include "dev/serial/uart_string.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -60,6 +61,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t rxbuf_[2];
+UartstrQueue uartStrQ_;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,9 +93,8 @@ int _write(int file, char* data, int len) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	//hc06_receive_byte();
   if (huart->Instance == USART1) {
-    //esp8266_select_test_menu(rxbuf_[0]);
-    //esp8266_print_test_menu();
-    //HAL_UART_Receive_IT(&huart1, rxbuf_, 1);
+    uartstr_get_byte(&uartStrQ_, rxbuf_[0]);
+    HAL_UART_Receive_IT(uartStrQ_.uart, rxbuf_, 1);
   }
 
 }
@@ -139,22 +140,34 @@ int main(void)
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
   //hc06_init(&huart3);
-  //HAL_UART_Receive_IT(&huart1, rxbuf_, 1);
+  uartStrQ_.uart = &huart1;
+  uartstr_init(&uartStrQ_);
+  HAL_UART_Receive_IT(uartStrQ_.uart, rxbuf_, 1);
   esp8266_init(USART3);
   esp8266_set_ssid("iPhone");
   esp8266_set_pwd("rlaehd30703");
   //esp8266_connect();
-  esp8266_scan();
+  //esp8266_scan();
   memset(data, 0, sizeof(data));
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  esp8266_print_test_menu();
   while (1)
   {
+#if 1 // test esp8266
     if (dequeue(&esp8266MessageQueue_, data) > 0) {
-      printf("%s - \r\n", data);
+      printf("esp : %s\r\n", data);
       memset(data, 0, sizeof(data));
+    }
+#endif
+
+    if (uartstr_receive_string(&uartStrQ_, data, sizeof(data)) > 0) {
+      printf("%s - \r\n", data);
+      esp8266_select_test_menu(data[0]);
+      memset(data, 0, sizeof(data));
+      esp8266_print_test_menu();
     }
     HAL_Delay(500);
   /* USER CODE END WHILE */
