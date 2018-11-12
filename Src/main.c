@@ -59,7 +59,8 @@
 #include "dev/serial/uart_string.h"
 
 #define ESP8266_TEST_MODE 0
-#define HC06_TEST_MODE 1
+#define HC06_TEST_MODE 0
+#define SPI_SD_TEST 1
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -133,6 +134,16 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char data[128];
+
+#if SPI_SD_TEST
+  FATFS fs;
+  FATFS *pfs;
+  FIL fil;
+  FRESULT fres;
+  DWORD fre_clust;
+  uint32_t total, free;
+  char buffer[100];
+#endif  // SPI_SD_TEST
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -180,6 +191,52 @@ int main(void)
   //hc06_set_pin("1111", 4);
 #endif  // HC06_TEST_MODE
 
+#if SPI_SD_TEST
+  /* Mount SD Card */
+    if(f_mount(&fs, "", 0) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    /* Open file to write */
+    if(f_open(&fil, "first.txt", FA_CREATE_NEW | FA_READ | FA_WRITE) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    /* Check free space */
+    if(f_getfree("", &fre_clust, &pfs) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    total = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
+    free = (uint32_t)(fre_clust * pfs->csize * 0.5);
+
+    /* Free space is less than 1kb */
+    if(free < 1)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    /* Writing text */
+    f_puts("STM32 SD Card I/O Example via SPI\n", &fil);
+    f_puts("Save the world!!!", &fil);
+
+    /* Close file */
+    if(f_close(&fil) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    /* Open file to read */
+    if(f_open(&fil, "first.txt", FA_READ) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    while(f_gets(buffer, sizeof(buffer), &fil))
+    {
+      //printf("%s", buffer);
+    }
+
+    /* Close file */
+    if(f_close(&fil) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+    /* Unmount SDCARD */
+    if(f_mount(NULL, "", 1) != FR_OK)
+      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+
+#endif  // SPI_SD_TEST
   memset(data, 0, sizeof(data));
   /* USER CODE END 2 */
 
