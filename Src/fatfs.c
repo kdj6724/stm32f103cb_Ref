@@ -1,8 +1,7 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file   fatfs.c
+  * @brief  Code for fatfs applications
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -47,83 +46,41 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#include "fatfs.h"
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f1xx_ll_usart.h"
-#include "stm32f1xx_ll_rcc.h"
-#include "stm32f1xx_ll_bus.h"
-#include "stm32f1xx_ll_system.h"
-#include "stm32f1xx_ll_exti.h"
-#include "stm32f1xx_ll_cortex.h"
-#include "stm32f1xx_ll_utils.h"
-#include "stm32f1xx_ll_pwr.h"
-#include "stm32f1xx_ll_dma.h"
-#include "stm32f1xx.h"
-#include "stm32f1xx_ll_gpio.h"
+uint8_t retUSER;    /* Return value for USER */
+char USERPath[4];   /* USER logical drive path */
+FATFS USERFatFS;    /* File system object for USER logical drive */
+FIL USERFile;       /* File object for USER */
 
-/* USER CODE BEGIN Includes */
+/* USER CODE BEGIN Variables */
 
-/* USER CODE END Includes */
+/* USER CODE END Variables */    
 
-/* Private define ------------------------------------------------------------*/
+void MX_FATFS_Init(void) 
+{
+  /*## FatFS: Link the USER driver ###########################*/
+  retUSER = FATFS_LinkDriver(&USER_Driver, USERPath);
 
-#define PWM_CH1_Pin GPIO_PIN_0
-#define PWM_CH1_GPIO_Port GPIOA
-#define PWM_CH2_Pin GPIO_PIN_1
-#define PWM_CH2_GPIO_Port GPIOA
-#define LoadCell_CLK_Pin GPIO_PIN_0
-#define LoadCell_CLK_GPIO_Port GPIOB
-#define Emergence_BTN_EXTI1_Pin GPIO_PIN_1
-#define Emergence_BTN_EXTI1_GPIO_Port GPIOB
-#define Emergence_BTN_EXTI1_EXTI_IRQn EXTI1_IRQn
-#define BOOT1_Pin GPIO_PIN_2
-#define BOOT1_GPIO_Port GPIOB
-#define ELECTROMAGNET_CTRL_1_Pin GPIO_PIN_13
-#define ELECTROMAGNET_CTRL_1_GPIO_Port GPIOB
-#define ELECTROMAGNET_CTRL_2_Pin GPIO_PIN_14
-#define ELECTROMAGNET_CTRL_2_GPIO_Port GPIOB
-#define BAR_LED_CTRL_1_Pin GPIO_PIN_15
-#define BAR_LED_CTRL_1_GPIO_Port GPIOB
-#define BAR_LED_CTRL_2_Pin GPIO_PIN_8
-#define BAR_LED_CTRL_2_GPIO_Port GPIOA
-#define USER_LED_STATUS_Pin GPIO_PIN_11
-#define USER_LED_STATUS_GPIO_Port GPIOA
-#define USER_KEY_1_EXTI_Pin GPIO_PIN_12
-#define USER_KEY_1_EXTI_GPIO_Port GPIOA
-#define USER_KEY_1_EXTI_EXTI_IRQn EXTI15_10_IRQn
-#define LED_R_EXTERNAL_Pin GPIO_PIN_15
-#define LED_R_EXTERNAL_GPIO_Port GPIOA
-#define LED_G_EXTERNAL_Pin GPIO_PIN_3
-#define LED_G_EXTERNAL_GPIO_Port GPIOB
-#define LED_B_EXTERNAL_Pin GPIO_PIN_4
-#define LED_B_EXTERNAL_GPIO_Port GPIOB
-#define SD_DETECT_Pin GPIO_PIN_9
-#define SD_DETECT_GPIO_Port GPIOB
-
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
-
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#ifdef __cplusplus
+  /* USER CODE BEGIN Init */
+  /* additional user code for init */     
+  /* USER CODE END Init */
 }
-#endif
 
-#endif /* __MAIN_H__ */
+/**
+  * @brief  Gets Time from RTC 
+  * @param  None
+  * @retval Time in DWORD
+  */
+DWORD get_fattime(void)
+{
+  /* USER CODE BEGIN get_fattime */
+  return 0;
+  /* USER CODE END get_fattime */  
+}
+
+/* USER CODE BEGIN Application */
+     
+/* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
