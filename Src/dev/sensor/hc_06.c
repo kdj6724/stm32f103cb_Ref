@@ -4,63 +4,79 @@
 #include <string.h>
 #include "hc_06.h"
 
-UART_HandleTypeDef* hc06UART_ = NULL;
-uint8_t rxbuf_[2];
+#define HC06_UART_RXLEN  128
+USART_TypeDef* hc06UART_ = NULL;
+uint8_t rxbuf_[HC06_UART_RXLEN];
 
-int hc06_send_atcmd(uint8_t* data, int len) {
-	HAL_StatusTypeDef status;
-  if (hc06UART_ == NULL) {
-    printf("[hc-06] uart is NULL(%d)\r\n", __LINE__);
-    return -1;
+void hc06_usart_rx_callback(USART_TypeDef* uart) {
+  static uint16_t cnt = 0;
+  char t;
+
+  if(LL_USART_IsActiveFlag_RXNE(uart)) {
+    t = LL_USART_ReceiveData8(uart);
+    printf("rx : 0x%x (%c)\r\n", t, t);
+    if((t!='\n') && (cnt < (HC06_UART_RXLEN-1))) {
+      rxbuf_[cnt] = t;
+      cnt++;
+    }
+    else {
+     // printf("[esp8266-dev] received : %s\r\n", rxbuf_);
+      enqueue(&hc06MessageQueue_, (char*)rxbuf_, cnt);
+      memset(rxbuf_, 0, sizeof(rxbuf_));
+      cnt = 0;
+    }
   }
-  printf("[hc-06] send : %s\r\n", data);
-	status = HAL_UART_Transmit(hc06UART_, (uint8_t*)data, len, 1000);
-	return (status == HAL_OK ? len : 0);
 }
 
-int hc06_init(UART_HandleTypeDef* uart) {
+int hc06_send_atcmd(USART_TypeDef* uart, uint8_t *Buffer, int reqLen) {
+	int len = 0;
+
+	  if (uart == NULL) {
+	    printf("[esp8266-dev] uart is NULL(%d)\r\n", __LINE__);
+	    return -1;
+	  }
+
+	  if (reqLen == 0)
+	    return 0;
+
+	  while(*Buffer){
+	    while(!LL_USART_IsActiveFlag_TXE(uart)) {
+	      HAL_Delay(10);
+	    };
+	    LL_USART_TransmitData8(uart,*Buffer++);
+	    len++;
+	    reqLen--;
+	    if (reqLen == 0)
+	      break;
+	  }
+	  return len;
+}
+
+int hc06_init(USART_TypeDef* uart) {
+  init_queue(&hc06MessageQueue_);
+  LL_USART_EnableIT_RXNE(uart);
   hc06UART_ = uart;
-  HAL_UART_Receive_IT(uart, rxbuf_, 1);
-  //hc06_set_baudrate(HC06_BAUD_9600);
-  hc06_set_bluetoothname("co-m", 4);
   return 0;
-}
-
-int hc06_receive_byte(void) {
-  int res = HC06_CMD0;
-
-  if (hc06UART_ == NULL) {
-    printf("[hc-06] uart is NULL(%d)\r\n", __LINE__);
-    return -1;
-  }
-  if (rxbuf_[0] == HC06_UART_ENDBYTE) {
-    res = HC06_CMD1;
-  } else {
-    printf("[hc-06] receive : 0x%x(%c)\r\n", rxbuf_[0], rxbuf_[0]);
-  }
-  memset(rxbuf_, 0, sizeof(rxbuf_));
-  HAL_UART_Receive_IT(hc06UART_, rxbuf_, 1);
-  return res;
 }
 
 int hc06_set_baudrate(int val) {
   uint8_t cmd[32];
   memset(cmd, 0, sizeof(cmd));
   sprintf((char*)cmd, "%sBAUD%d",HC06_ATCMD_PREFIX, val);
-  return hc06_send_atcmd(cmd, strlen((char*)cmd));
+  return hc06_send_atcmd(hc06UART_, cmd, strlen((char*)cmd));
 }
 
 int hc06_set_bluetoothname(char* name, int len) {
   uint8_t cmd[32];
   memset(cmd, 0, sizeof(cmd));
   sprintf((char*)cmd, "%sNAME%s",HC06_ATCMD_PREFIX, name);
-  return hc06_send_atcmd(cmd, strlen((char*)cmd));
+  return hc06_send_atcmd(hc06UART_, cmd, strlen((char*)cmd));
 }
 
 int hc06_set_pin(char* pin, int len) {
   uint8_t cmd[32];
   memset(cmd, 0, sizeof(cmd));
   sprintf((char*)cmd, "%sPIN%s",HC06_ATCMD_PREFIX, pin);
-  return hc06_send_atcmd(cmd, strlen((char*)cmd));
+  return hc06_send_atcmd(hc06UART_, cmd, strlen((char*)cmd));
 }
 

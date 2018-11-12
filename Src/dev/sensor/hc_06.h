@@ -2,6 +2,7 @@
 // kdj6724@naver.com
 // 2018-10-26
 #include "stm32f1xx_hal.h"
+#include "../data/queue.h"
 
 #ifndef DEV_SENSOR_HC_06_H_
 #define DEV_SENSOR_HC_06_H_
@@ -10,8 +11,8 @@
 extern "C" {
 #endif
 
+Queue hc06MessageQueue_;
 #define HC06_UART_ENDBYTE '\n'
-
 #define HC06_ATCMD_PREFIX "AT+"
 
 enum hc06_baudrate {
@@ -35,8 +36,8 @@ enum hc06_cmd {
   HC06_CMD3,
 };
 
-int hc06_init(UART_HandleTypeDef* uart);
-int hc06_receive_byte(void);
+void hc06_usart_rx_callback(USART_TypeDef* uart);
+int hc06_init(USART_TypeDef* uart);
 int hc06_set_baudrate(int val);
 int hc06_set_bluetoothname(char* name, int len);
 int hc06_set_pin(char* pin, int len);

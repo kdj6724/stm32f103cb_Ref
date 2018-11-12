@@ -8,14 +8,14 @@
 #include "esp8266_dev.h"
 
 #define ESP8266_ATCMD_PREFIX "AT+"
-#define ESP8266_UART_RXLEN  64
+#define ESP8266_UART_RXLEN  128
 
 USART_TypeDef* esp8266UART_ = NULL;
 uint8_t rxbuf_[ESP8266_UART_RXLEN];
 char ssid_[64];
 char pwd_[64];
 
-void USART_Rx_Callback(USART_TypeDef* uart) {
+void esp8266_usart_rx_callback(USART_TypeDef* uart) {
   static uint16_t cnt = 0;
   char t;
 

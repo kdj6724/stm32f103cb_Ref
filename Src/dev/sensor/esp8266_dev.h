@@ -13,7 +13,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define ESP8266_MACADDR_LENGTH  17
+#define ESP8266_SCAN_RESET_KEY  "AT+CWLAP"
+#define ESP8266_SCAN_INFO_KEY "+CWLAP:("
 Queue esp8266MessageQueue_;
 
 enum esp8266_mode {
@@ -22,10 +24,20 @@ enum esp8266_mode {
 	esp8266_DUAL,
 };
 
+typedef struct esp8266ScanInfo {
+  char wps;
+  char* ssid;
+  int rssi;
+  char* mac;
+  char channel;
+} esp8266ScanInfo;
+
+
 #define ESP8266_TEST_CONNECT  'c'
 #define ESP8266_TEST_SCAN     's'
 #define ESP8266_TEST_GETIP    'i'
 
+void esp8266_usart_rx_callback(USART_TypeDef* uart);
 void esp8266_print_test_menu();
 int esp8266_select_test_menu(char index);
 int esp8266_init(USART_TypeDef* uart);

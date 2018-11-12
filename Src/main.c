@@ -46,6 +46,9 @@
 #include "dev/sensor/hc_06.h"
 #include "dev/sensor/esp8266_dev.h"
 #include "dev/serial/uart_string.h"
+
+#define ESP8266_TEST_MODE 0
+#define HC06_TEST_MODE 1
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -98,6 +101,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   }
 
 }
+
+void USART_Rx_Callback(USART_TypeDef* uart) {
+#if HC06_TEST_MODE
+  hc06_usart_rx_callback(uart);
+#endif
+
+#if ESP8266_TEST_MODE
+  esp8266_usart_rx_callback(uart);
+#endif
+}
 /* USER CODE END 0 */
 
 /**
@@ -139,26 +152,40 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  //hc06_init(&huart3);
   uartStrQ_.uart = &huart1;
   uartstr_init(&uartStrQ_);
   HAL_UART_Receive_IT(uartStrQ_.uart, rxbuf_, 1);
+#if ESP8266_TEST_MODE
   esp8266_init(USART3);
-  esp8266_set_ssid("iPhone");
-  esp8266_set_pwd("rlaehd30703");
-  //esp8266_connect();
-  //esp8266_scan();
+  esp8266_set_ssid("iptime");
+  esp8266_set_pwd("");
+  esp8266_print_test_menu();
+#endif  // ESP8266_TEST_MODE
+
+#if HC06_TEST_MODE
+  hc06_init(USART3);
+  hc06_set_bluetoothname("kdj6724", 7);
+  //hc06_set_pin("1111", 4);
+#endif  // HC06_TEST_MODE
+
   memset(data, 0, sizeof(data));
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  esp8266_print_test_menu();
+
   while (1)
   {
-#if 1 // test esp8266
+#if ESP8266_TEST_MODE // test esp8266
     if (dequeue(&esp8266MessageQueue_, data) > 0) {
       printf("esp : %s\r\n", data);
+      memset(data, 0, sizeof(data));
+    }
+#endif
+
+#if HC06_TEST_MODE // test esp8266
+    if (dequeue(&hc06MessageQueue_, data) > 0) {
+      printf("hc06 : %s\r\n", data);
       memset(data, 0, sizeof(data));
     }
 #endif
