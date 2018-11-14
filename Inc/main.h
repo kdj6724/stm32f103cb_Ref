@@ -74,6 +74,8 @@
 #define PWM_CH1_GPIO_Port GPIOA
 #define PWM_CH2_Pin GPIO_PIN_1
 #define PWM_CH2_GPIO_Port GPIOA
+#define SD_CS_Pin GPIO_PIN_4
+#define SD_CS_GPIO_Port GPIOA
 #define LoadCell_CLK_Pin GPIO_PIN_0
 #define LoadCell_CLK_GPIO_Port GPIOB
 #define Emergence_BTN_EXTI1_Pin GPIO_PIN_1

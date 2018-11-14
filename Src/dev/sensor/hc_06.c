@@ -2,7 +2,7 @@
 // kdj6724@naver.com
 // 2018-10-26
 #include <string.h>
-#include "hc_06.h"
+#include "dev/sensor/hc_06.h"
 
 #define HC06_UART_RXLEN  128
 USART_TypeDef* hc06UART_ = NULL;

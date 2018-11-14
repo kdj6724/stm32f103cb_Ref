@@ -5,7 +5,7 @@
  *      Author: kdj6724
  */
 #include <string.h>
-#include "esp8266_dev.h"
+#include "dev/sensor/esp8266_dev.h"
 
 #define ESP8266_ATCMD_PREFIX "AT+"
 #define ESP8266_UART_RXLEN  128

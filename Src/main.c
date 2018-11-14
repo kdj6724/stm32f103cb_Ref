@@ -77,6 +77,17 @@ UART_HandleTypeDef huart2;
 /* Private variables ---------------------------------------------------------*/
 uint8_t rxbuf_[2];
 UartstrQueue uartStrQ_;
+
+#if SPI_SD_TEST
+FATFS fs_;
+FATFS *pfs_;
+FIL fil_;
+FRESULT fres_;
+DWORD fre_clust_;
+uint32_t total_, free_;
+char buffer_[100];
+#endif  // SPI_SD_TEST
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,15 +146,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
   char data[128];
 
-#if SPI_SD_TEST
-  FATFS fs;
-  FATFS *pfs;
-  FIL fil;
-  FRESULT fres;
-  DWORD fre_clust;
-  uint32_t total, free;
-  char buffer[100];
-#endif  // SPI_SD_TEST
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -193,48 +195,56 @@ int main(void)
 
 #if SPI_SD_TEST
   /* Mount SD Card */
-    if(f_mount(&fs, "", 0) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_mount(&fs_, "", 0) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
     /* Open file to write */
-    if(f_open(&fil, "first.txt", FA_CREATE_NEW | FA_READ | FA_WRITE) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_open(&fil_, "first.txt", FA_OPEN_ALWAYS | FA_READ | FA_WRITE) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
     /* Check free space */
-    if(f_getfree("", &fre_clust, &pfs) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_getfree("", &fre_clust_, &pfs_) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
-    total = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
-    free = (uint32_t)(fre_clust * pfs->csize * 0.5);
+    total_ = (uint32_t)((pfs_->n_fatent - 2) * pfs_->csize * 0.5);
+    free_ = (uint32_t)(fre_clust_ * pfs_->csize * 0.5);
 
     /* Free space is less than 1kb */
-    if(free < 1)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(free_ < 1)
+      _Error_Handler(__FILE__, __LINE__);
 
     /* Writing text */
-    f_puts("STM32 SD Card I/O Example via SPI\n", &fil);
-    f_puts("Save the world!!!", &fil);
+    f_puts("kdj6724 sdcard test\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+    f_puts("Save the world!!!\n", &fil_);
+
 
     /* Close file */
-    if(f_close(&fil) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_close(&fil_) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
     /* Open file to read */
-    if(f_open(&fil, "first.txt", FA_READ) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_open(&fil_, "first.txt", FA_READ) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
-    while(f_gets(buffer, sizeof(buffer), &fil))
+    while(f_gets(buffer_, sizeof(buffer_), &fil_))
     {
-      //printf("%s", buffer);
+      printf("%s\r\n", buffer_);
     }
 
     /* Close file */
-    if(f_close(&fil) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+    if(f_close(&fil_) != FR_OK)
+      _Error_Handler(__FILE__, __LINE__);
 
     /* Unmount SDCARD */
     if(f_mount(NULL, "", 1) != FR_OK)
-      printf("[sd test] %s (%d)\r\n ", __FILE__, __LINE__);
+      _Error_Handler(__FILE__, __LINE__);
 
 #endif  // SPI_SD_TEST
   memset(data, 0, sizeof(data));
@@ -290,7 +300,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -300,12 +312,12 @@ void SystemClock_Config(void)
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -379,8 +391,8 @@ static void MX_SPI1_Init(void)
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -531,14 +543,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, SD_CS_Pin|USER_LED_STATUS_Pin|LED_R_EXTERNAL_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LoadCell_CLK_Pin|ELECTROMAGNET_CTRL_1_Pin|ELECTROMAGNET_CTRL_2_Pin|BAR_LED_CTRL_1_Pin 
                           |LED_G_EXTERNAL_Pin|LED_B_EXTERNAL_Pin|GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BAR_LED_CTRL_2_GPIO_Port, BAR_LED_CTRL_2_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, USER_LED_STATUS_Pin|LED_R_EXTERNAL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SD_DETECT_GPIO_Port, SD_DETECT_Pin, GPIO_PIN_SET);
@@ -548,6 +560,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SD_CS_Pin USER_LED_STATUS_Pin LED_R_EXTERNAL_Pin */
+  GPIO_InitStruct.Pin = SD_CS_Pin|USER_LED_STATUS_Pin|LED_R_EXTERNAL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LoadCell_CLK_Pin ELECTROMAGNET_CTRL_1_Pin ELECTROMAGNET_CTRL_2_Pin BAR_LED_CTRL_1_Pin 
                            LED_G_EXTERNAL_Pin LED_B_EXTERNAL_Pin PB8 */
@@ -576,13 +595,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(BAR_LED_CTRL_2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : USER_LED_STATUS_Pin LED_R_EXTERNAL_Pin */
-  GPIO_InitStruct.Pin = USER_LED_STATUS_Pin|LED_R_EXTERNAL_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USER_KEY_1_EXTI_Pin */
   GPIO_InitStruct.Pin = USER_KEY_1_EXTI_Pin;

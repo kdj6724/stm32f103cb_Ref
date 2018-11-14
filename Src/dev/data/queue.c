@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "queue.h"
+#include "dev/data/queue.h"
 
 int init_queue(Queue* queue) {
   queue->front = NULL;

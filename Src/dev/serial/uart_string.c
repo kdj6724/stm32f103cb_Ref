@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "uart_string.h"
+#include "dev/serial/uart_string.h"
 
 // 주의 딱한번만 호출되도록
 int uartstr_init(UartstrQueue* uart) {
